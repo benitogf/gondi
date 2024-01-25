@@ -1,4 +1,4 @@
-module github.com/bitfocus/gondi
+module github.com/benitogf/gondi
 
 go 1.18
 
