@@ -14,14 +14,17 @@ var (
 	ndilib_initialize  func() bool
 	ndilib_version     func() uintptr
 
-	ndilib_util_audio_from_interleaved_32f_v2 func(src uintptr, dst uintptr)
-	ndilib_util_audio_to_interleaved_32f_v2   func(src uintptr, dst uintptr)
+	ndilib_util_audio_from_interleaved_32f_v2   func(src uintptr, dst uintptr)
+	ndilib_util_audio_to_interleaved_32f_v2     func(src uintptr, dst uintptr)
+	ndilib_util_send_send_audio_interleaved_16s func(instance uintptr, frame uintptr)
+	ndilib_util_send_send_audio_interleaved_32f func(instance uintptr, frame uintptr)
 
 	ndilib_send_create_v2                 func(settings uintptr) uintptr
 	ndilib_send_destroy                   func(instance uintptr)
 	ndilib_send_send_video_v2             func(instance uintptr, frame uintptr)
 	ndilib_send_send_video_async_v2       func(instance uintptr, frame uintptr)
 	ndilib_send_send_audio_v2             func(instance uintptr, frame uintptr)
+	ndilib_send_send_audio_v3             func(instance uintptr, frame uintptr)
 	ndilib_send_send_metadata             func(instance uintptr, frame uintptr)
 	ndilib_send_get_tally                 func(instance uintptr, tally uintptr, timeout uint32) bool
 	ndilib_send_capture                   func(instance uintptr, metadata uintptr, timeout uint32) int32
@@ -36,12 +39,14 @@ var (
 	ndilib_find_get_current_sources func(instance uintptr, numSources uintptr) uintptr
 	ndilib_find_wait_for_sources    func(instance uintptr, timeout uint32) bool
 
+	ndilib_recv_connect                   func(instance uintptr, source uintptr)
 	ndilib_recv_create_v3                 func(settings uintptr) uintptr
 	ndilib_recv_destroy                   func(instance uintptr)
 	ndilib_recv_free_video_v2             func(instance uintptr, frame uintptr)
 	ndilib_recv_free_audio_v2             func(instance uintptr, frame uintptr)
 	ndilib_recv_free_metadata             func(instance uintptr, frame uintptr)
 	ndilib_recv_capture_v2                func(instance uintptr, videoFrame uintptr, audioFrame uintptr, metadataFrame uintptr, timeout uint32) int32
+	ndilib_recv_capture_v3                func(instance uintptr, videoFrame uintptr, audioFrame uintptr, metadataFrame uintptr, timeout uint32) int32
 	ndilib_recv_get_performance           func(instance uintptr, total uintptr, dropped uintptr)
 	ndilib_recv_set_tally                 func(instance uintptr, tally uintptr) bool
 	ndilib_recv_send_metadata             func(instance uintptr, metadata uintptr) bool
@@ -96,12 +101,15 @@ func InitLibrary(libraryPath string) error {
 
 		purego.RegisterLibFunc(&ndilib_util_audio_from_interleaved_32f_v2, ndi_shared_library, "NDIlib_util_audio_from_interleaved_32f_v2")
 		purego.RegisterLibFunc(&ndilib_util_audio_to_interleaved_32f_v2, ndi_shared_library, "NDIlib_util_audio_to_interleaved_32f_v2")
+		purego.RegisterLibFunc(&ndilib_util_send_send_audio_interleaved_16s, ndi_shared_library, "NDIlib_util_send_send_audio_interleaved_16s")
+		purego.RegisterLibFunc(&ndilib_util_send_send_audio_interleaved_32f, ndi_shared_library, "NDIlib_util_send_send_audio_interleaved_32f")
 
 		purego.RegisterLibFunc(&ndilib_send_create_v2, ndi_shared_library, "NDIlib_send_create_v2")
 		purego.RegisterLibFunc(&ndilib_send_destroy, ndi_shared_library, "NDIlib_send_destroy")
 		purego.RegisterLibFunc(&ndilib_send_send_video_v2, ndi_shared_library, "NDIlib_send_send_video_v2")
 		purego.RegisterLibFunc(&ndilib_send_send_video_async_v2, ndi_shared_library, "NDIlib_send_send_video_async_v2")
 		purego.RegisterLibFunc(&ndilib_send_send_audio_v2, ndi_shared_library, "NDIlib_send_send_audio_v2")
+		purego.RegisterLibFunc(&ndilib_send_send_audio_v3, ndi_shared_library, "NDIlib_send_send_audio_v3")
 		purego.RegisterLibFunc(&ndilib_send_get_tally, ndi_shared_library, "NDIlib_send_get_tally")
 		purego.RegisterLibFunc(&ndilib_send_capture, ndi_shared_library, "NDIlib_send_capture")
 		purego.RegisterLibFunc(&ndilib_send_free_metadata, ndi_shared_library, "NDIlib_send_free_metadata")
@@ -117,11 +125,13 @@ func InitLibrary(libraryPath string) error {
 		purego.RegisterLibFunc(&ndilib_find_destroy, ndi_shared_library, "NDIlib_find_destroy")
 
 		purego.RegisterLibFunc(&ndilib_recv_create_v3, ndi_shared_library, "NDIlib_recv_create_v3")
+		purego.RegisterLibFunc(&ndilib_recv_connect, ndi_shared_library, "NDIlib_recv_connect")
 		purego.RegisterLibFunc(&ndilib_recv_destroy, ndi_shared_library, "NDIlib_recv_destroy")
 		purego.RegisterLibFunc(&ndilib_recv_free_metadata, ndi_shared_library, "NDIlib_recv_free_metadata")
 		purego.RegisterLibFunc(&ndilib_recv_free_video_v2, ndi_shared_library, "NDIlib_recv_free_video_v2")
 		purego.RegisterLibFunc(&ndilib_recv_free_audio_v2, ndi_shared_library, "NDIlib_recv_free_audio_v2")
 		purego.RegisterLibFunc(&ndilib_recv_capture_v2, ndi_shared_library, "NDIlib_recv_capture_v2")
+		purego.RegisterLibFunc(&ndilib_recv_capture_v3, ndi_shared_library, "NDIlib_recv_capture_v3")
 		purego.RegisterLibFunc(&ndilib_recv_get_performance, ndi_shared_library, "NDIlib_recv_get_performance")
 		purego.RegisterLibFunc(&ndilib_recv_set_tally, ndi_shared_library, "NDIlib_recv_set_tally")
 		purego.RegisterLibFunc(&ndilib_recv_send_metadata, ndi_shared_library, "NDIlib_recv_send_metadata")

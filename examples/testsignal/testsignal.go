@@ -6,7 +6,7 @@ import (
 	"time"
 	"unsafe"
 
-	"github.com/bitfocus/gondi"
+	"github.com/benitogf/gondi"
 )
 
 const (
