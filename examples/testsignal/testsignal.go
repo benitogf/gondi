@@ -2,11 +2,14 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"math"
+	"os"
+	"os/exec"
 	"time"
 	"unsafe"
 
-	"github.com/bitfocus/gondi"
+	"github.com/benitogf/gondi"
 )
 
 const (
@@ -118,11 +121,18 @@ func generateTestAudio(sender *gondi.SendInstance, dbVolume float32) {
 	}
 }
 
+func clear() {
+	cmd := exec.Command("clear")
+	cmd.Stdout = os.Stdout
+	cmd.Run()
+}
+
 func main() {
 	gondi.InitLibrary("")
+	NDIversion := gondi.GetVersion()
 
 	// Set up sender, block on both audio and video as we are using separate threads for audio and video
-	sender, err := gondi.NewSendInstance("Output 1", "", true, true)
+	sender, err := gondi.NewSendInstance("testsignal", "", true, true)
 	if err != nil {
 		panic(err)
 	}
@@ -136,6 +146,8 @@ func main() {
 
 	// Show info
 	for {
+		clear()
+		log.Println("version: ", NDIversion)
 		fmt.Printf("Generated %d video frames and %d audio frames\n", videoFrames, audioFrames)
 		time.Sleep(1 * time.Second)
 	}

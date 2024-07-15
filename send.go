@@ -44,6 +44,22 @@ func NewAudioFrameV2() *AudioFrameV2 {
 	return af
 }
 
+// Allocate a new NDI audio frame object
+func NewAudioFrameV3() *AudioFrameV3 {
+	af := &AudioFrameV3{}
+
+	af.SampleRate = 0
+	af.NumChannels = 0
+	af.NumSamples = 0
+	af.Timecode = SendTimecodeSynthesize
+	af.Data = nil
+	af.ChannelStride = 0
+	af.Metadata = nil
+	af.Timestamp = SendTimecodeEmpty
+
+	return af
+}
+
 // Allocate a new NDI audio frame object with preallocated data for
 // holding numChannels * numSamples samples.
 func NewAudioFrameV2Preallocated(numChannels int32, numSamples int32) *AudioFrameV2 {
@@ -158,6 +174,27 @@ func (p *SendInstance) SendAudioFrame(frame *AudioFrameV2) {
 	assertLibrary()
 
 	ndilib_send_send_audio_v2(p.ndiInstance, uintptr(unsafe.Pointer(frame)))
+}
+
+// Send an audio frame. This call is syncronous and will block until the frame has been sent, if you specified clockAudio=true in NewNDISendInstance().
+func (p *SendInstance) SendAudioFrameV3(frame *AudioFrameV3) {
+	assertLibrary()
+
+	ndilib_send_send_audio_v3(p.ndiInstance, uintptr(unsafe.Pointer(frame)))
+}
+
+// Send an audio frame. This call is syncronous and will block until the frame has been sent, if you specified clockAudio=true in NewNDISendInstance().
+func (p *SendInstance) SendAudioFrame16s(frame *AudioFrameV3) {
+	assertLibrary()
+
+	ndilib_util_send_send_audio_interleaved_16s(p.ndiInstance, uintptr(unsafe.Pointer(frame)))
+}
+
+// Send an audio frame. This call is syncronous and will block until the frame has been sent, if you specified clockAudio=true in NewNDISendInstance().
+func (p *SendInstance) SendAudioFrame32f(frame *AudioFrameV3) {
+	assertLibrary()
+
+	ndilib_util_send_send_audio_interleaved_32f(p.ndiInstance, uintptr(unsafe.Pointer(frame)))
 }
 
 // This will assign a new fail-over source for this video source. What this means is that if this video source was to fail

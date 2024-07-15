@@ -16,12 +16,23 @@ func NewRecvInstance(settings *NewRecvInstanceSettings) (*RecvInstance, error) {
 		name = cString(settings.Name)
 	}
 
-	intSettings := &recvCreateSettings{
-		sourceToConnectTo: *settings.SourceToConnectTo,
-		colorFormat:       settings.ColorFormat,
-		bandwidth:         settings.Bandwidth,
-		allowVideoFields:  settings.AllowVideoFields,
-		name:              name,
+	intSettings := &recvCreateSettings{}
+	if settings.SourceToConnectTo != nil {
+		intSettings = &recvCreateSettings{
+			sourceToConnectTo: *settings.SourceToConnectTo,
+			colorFormat:       settings.ColorFormat,
+			bandwidth:         settings.Bandwidth,
+			allowVideoFields:  settings.AllowVideoFields,
+			name:              name,
+		}
+	} else {
+		intSettings = &recvCreateSettings{
+			sourceToConnectTo: Source{},
+			colorFormat:       settings.ColorFormat,
+			bandwidth:         settings.Bandwidth,
+			allowVideoFields:  settings.AllowVideoFields,
+			name:              name,
+		}
 	}
 
 	inst := &RecvInstance{
@@ -45,6 +56,23 @@ func (p *RecvInstance) CaptureV2(vf *VideoFrameV2, af *AudioFrameV2, mf *Metadat
 	assertLibrary()
 
 	return FrameType(ndilib_recv_capture_v2(p.ndiInstance, uintptr(unsafe.Pointer(vf)), uintptr(unsafe.Pointer(af)), uintptr(unsafe.Pointer(mf)), timeoutMs))
+}
+
+// This will allow you to receive video, audio and metadata frames from the source you are connected to.
+// Any of the frame pointers can be nil, in which case that type of frame will not be captured.
+// This call can be called on separate threads, so it is possible to have a separate thread for each of video, audio and metadata.
+// This function will return the type of frame that was received, or gondi.FrameTypeNone if no frame was received within the specified timeout.
+func (p *RecvInstance) CaptureV3(vf *VideoFrameV2, af *AudioFrameV3, mf *MetadataFrame, timeoutMs uint32) FrameType {
+	assertLibrary()
+
+	return FrameType(ndilib_recv_capture_v3(p.ndiInstance, uintptr(unsafe.Pointer(vf)), uintptr(unsafe.Pointer(af)), uintptr(unsafe.Pointer(mf)), timeoutMs))
+}
+
+// Connect
+func (p *RecvInstance) Connect(source *Source) {
+	assertLibrary()
+
+	ndilib_recv_connect(p.ndiInstance, uintptr(unsafe.Pointer(source)))
 }
 
 // Get the current amount of total and dropped video, audio and metadata frames. This can be used to determine if

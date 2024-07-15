@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/bitfocus/gondi"
+	"github.com/benitogf/gondi"
 )
 
 func main() {
