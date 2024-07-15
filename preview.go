@@ -25,7 +25,7 @@ func GetPreview(streamName string) (*image.RGBA, error) {
 		}
 	}
 
-	return GenerateEmpty(), errors.New("preview not found")
+	return GenerateAlpha(), errors.New("preview not found")
 }
 
 func GetPreviewIndex(streamName string) (int, error) {
@@ -43,14 +43,14 @@ func ClearPreview(streamName string) {
 	if err != nil {
 		Previews = append(Previews, Preview{
 			StreamName: streamName,
-			IMG:        GenerateEmpty(),
+			IMG:        GenerateAlpha(),
 			Width:      EMPTY_X,
 			Height:     EMPTY_Y,
 		})
 		return
 	}
 
-	Previews[index].IMG = GenerateEmpty()
+	Previews[index].IMG = GenerateAlpha()
 }
 
 func SetPreviewFrame(streamName string, frame []byte, width, height int) {
@@ -88,7 +88,7 @@ func generateStatic(width, height int) []byte {
 	return img.Pix
 }
 
-func GenerateEmpty() *image.RGBA {
+func GenerateAlpha() *image.RGBA {
 	img := image.NewRGBA(image.Rect(0, 0, EMPTY_X, EMPTY_Y))
 	img.Pix = generateStatic(EMPTY_X, EMPTY_Y)
 	return img

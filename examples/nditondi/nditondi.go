@@ -30,6 +30,7 @@ var (
 	CaptureCount      int64
 	CaptureErrorCount int64
 	CaptureNoneCount  int64
+	CaptureEmptyCount int64
 	NDISources        []*gondi.Source
 )
 
@@ -49,6 +50,12 @@ func ndiToNDI(receiver *gondi.RecvInstance, sender *gondi.SendInstance) {
 			videoInputSlice := unsafe.Slice(videoInput.Data, size)
 			frame := make([]byte, len(videoInputSlice))
 			copy(frame, videoInputSlice)
+
+			if len(frame) == 0 {
+				gondi.SendAlphaFrame(sender)
+				CaptureEmptyCount++
+				continue
+			}
 
 			// if videoInput.FourCC == gondi.FourCCTypeUYVY {
 			// 	log.Println("preview UYVY", len(frame))
@@ -76,9 +83,10 @@ func ndiToNDI(receiver *gondi.RecvInstance, sender *gondi.SendInstance) {
 			videoOutput.Yres = videoInput.Yres
 			videoOutput.FrameRateN = videoInput.FrameRateN
 			videoOutput.FrameRateD = videoInput.FrameRateD
+			videoOutput.LineStride = videoInput.LineStride
 			FrameRateN = videoOutput.FrameRateN
 			FrameRateD = videoOutput.FrameRateD
-			videoOutput.Data = videoInput.Data
+			videoOutput.Data = &frame[0]
 
 			sender.SendVideoFrame(videoOutput)
 			receiver.FreeVideoV2(videoInput)
@@ -201,6 +209,7 @@ func main() {
 			log.Println("captures: ", CaptureCount)
 			log.Println("capture error: ", CaptureErrorCount)
 			log.Println("capture none: ", CaptureNoneCount)
+			log.Println("capture empty: ", CaptureEmptyCount)
 			log.Println("received video frames: ", totals.VideoFrames)
 			log.Println("dropped frames: ", dropped.VideoFrames)
 			time.Sleep(1 * time.Second)
