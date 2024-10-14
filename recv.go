@@ -2,7 +2,6 @@ package gondi
 
 import (
 	"errors"
-	"unsafe"
 )
 
 // Allocate a new Receiver, using a NewRecvInstanceSetting struct as parameters
@@ -40,7 +39,7 @@ func NewRecvInstance(settings *NewRecvInstanceSettings) (*RecvInstance, error) {
 		createSettings: intSettings,
 	}
 
-	inst.ndiInstance = ndilib_recv_create_v3(uintptr(unsafe.Pointer(intSettings)))
+	inst.ndiInstance = ndilib_recv_create_v3(intSettings)
 	if inst.ndiInstance == 0 {
 		return nil, errors.New("unable to create receiver instance")
 	}
@@ -55,7 +54,7 @@ func NewRecvInstance(settings *NewRecvInstanceSettings) (*RecvInstance, error) {
 func (p *RecvInstance) CaptureV2(vf *VideoFrameV2, af *AudioFrameV2, mf *MetadataFrame, timeoutMs uint32) FrameType {
 	assertLibrary()
 
-	return FrameType(ndilib_recv_capture_v2(p.ndiInstance, uintptr(unsafe.Pointer(vf)), uintptr(unsafe.Pointer(af)), uintptr(unsafe.Pointer(mf)), timeoutMs))
+	return FrameType(ndilib_recv_capture_v2(p.ndiInstance, vf, af, mf, timeoutMs))
 }
 
 // This will allow you to receive video, audio and metadata frames from the source you are connected to.
@@ -65,14 +64,14 @@ func (p *RecvInstance) CaptureV2(vf *VideoFrameV2, af *AudioFrameV2, mf *Metadat
 func (p *RecvInstance) CaptureV3(vf *VideoFrameV2, af *AudioFrameV3, mf *MetadataFrame, timeoutMs uint32) FrameType {
 	assertLibrary()
 
-	return FrameType(ndilib_recv_capture_v3(p.ndiInstance, uintptr(unsafe.Pointer(vf)), uintptr(unsafe.Pointer(af)), uintptr(unsafe.Pointer(mf)), timeoutMs))
+	return FrameType(ndilib_recv_capture_v3(p.ndiInstance, vf, af, mf, timeoutMs))
 }
 
 // Connect
 func (p *RecvInstance) Connect(source *Source) {
 	assertLibrary()
 
-	ndilib_recv_connect(p.ndiInstance, uintptr(unsafe.Pointer(source)))
+	ndilib_recv_connect(p.ndiInstance, source)
 }
 
 // Get the current amount of total and dropped video, audio and metadata frames. This can be used to determine if
@@ -82,7 +81,7 @@ func (p *RecvInstance) GetPerformance() (total *RecvPerformance, dropped *RecvPe
 	total = &RecvPerformance{}
 	dropped = &RecvPerformance{}
 
-	ndilib_recv_get_performance(p.ndiInstance, uintptr(unsafe.Pointer(total)), uintptr(unsafe.Pointer(dropped)))
+	ndilib_recv_get_performance(p.ndiInstance, total, dropped)
 
 	return total, dropped
 }
@@ -93,7 +92,7 @@ func (p *RecvInstance) SetTally(program bool, preview bool) bool {
 	assertLibrary()
 	tally := &Tally{program, preview}
 
-	return ndilib_recv_set_tally(p.ndiInstance, uintptr(unsafe.Pointer(tally)))
+	return ndilib_recv_set_tally(p.ndiInstance, tally)
 }
 
 // This function will send a meta frame to the source that we are connected too. This returns FALSE if we are
@@ -101,7 +100,7 @@ func (p *RecvInstance) SetTally(program bool, preview bool) bool {
 func (p *RecvInstance) SendMetadata(metadata *MetadataFrame) bool {
 	assertLibrary()
 
-	return ndilib_recv_send_metadata(p.ndiInstance, uintptr(unsafe.Pointer(metadata)))
+	return ndilib_recv_send_metadata(p.ndiInstance, metadata)
 }
 
 // Add a connection metadata string to the list of what is sent on each new connection. If someone is already connected then
@@ -109,7 +108,7 @@ func (p *RecvInstance) SendMetadata(metadata *MetadataFrame) bool {
 func (p *RecvInstance) AddConnectionMetadata(metadata *MetadataFrame) {
 	assertLibrary()
 
-	ndilib_recv_add_connection_metadata(p.ndiInstance, uintptr(unsafe.Pointer(metadata)))
+	ndilib_recv_add_connection_metadata(p.ndiInstance, metadata)
 }
 
 // Connection based metadata is data that is sent automatically each time a new connection is received. You queue all of these
@@ -122,17 +121,17 @@ func (p *RecvInstance) ClearConnectionMetadata() {
 
 // Free the buffers returned by capture for metadata
 func (p *RecvInstance) FreeMetadata(metadata *MetadataFrame) {
-	ndilib_recv_free_metadata(p.ndiInstance, uintptr(unsafe.Pointer(metadata)))
+	ndilib_recv_free_metadata(p.ndiInstance, metadata)
 }
 
 // Free the buffers returned by capture for video
 func (p *RecvInstance) FreeVideoV2(vf *VideoFrameV2) {
-	ndilib_recv_free_video_v2(p.ndiInstance, uintptr(unsafe.Pointer(vf)))
+	ndilib_recv_free_video_v2(p.ndiInstance, vf)
 }
 
 // Free the buffers returned by capture for audio
 func (p *RecvInstance) FreeAudioV2(af *AudioFrameV2) {
-	ndilib_recv_free_audio_v2(p.ndiInstance, uintptr(unsafe.Pointer(af)))
+	ndilib_recv_free_audio_v2(p.ndiInstance, af)
 }
 
 // Destroy a receiver instance
