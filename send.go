@@ -2,7 +2,6 @@ package gondi
 
 import (
 	"errors"
-	"unsafe"
 )
 
 // Set up a sender instance using the specified name and string.
@@ -11,7 +10,7 @@ func NewSendInstance(name string, groups string, clockVideo bool, clockAudio boo
 	assertLibrary()
 
 	settings := &sendCreateSettings{cString(name), cString(groups), clockVideo, clockAudio}
-	instance := ndilib_send_create_v2(uintptr(unsafe.Pointer(settings)))
+	instance := ndilib_send_create(settings)
 	if instance == 0 {
 		return nil, errors.New("unable to create send instance")
 	}
@@ -46,7 +45,7 @@ func NewAudioFrameV2() *AudioFrameV2 {
 
 // Allocate a new NDI audio frame object
 func NewAudioFrameV3() *AudioFrameV3 {
-	af := &AudioFrameV3{}
+	af := AudioFrameV3{}
 
 	af.SampleRate = 0
 	af.NumChannels = 0
@@ -57,13 +56,13 @@ func NewAudioFrameV3() *AudioFrameV3 {
 	af.Metadata = nil
 	af.Timestamp = SendTimecodeEmpty
 
-	return af
+	return &af
 }
 
 // Allocate a new NDI audio frame object with preallocated data for
 // holding numChannels * numSamples samples.
 func NewAudioFrameV2Preallocated(numChannels int32, numSamples int32) *AudioFrameV2 {
-	af := &AudioFrameV2{}
+	af := AudioFrameV2{}
 	data := make([]float32, numChannels*numSamples)
 
 	af.SampleRate = 0
@@ -75,7 +74,7 @@ func NewAudioFrameV2Preallocated(numChannels int32, numSamples int32) *AudioFram
 	af.Metadata = nil
 	af.Timestamp = SendTimecodeEmpty
 
-	return af
+	return &af
 }
 
 // Allocate a new NDI video frame with defaults
@@ -102,7 +101,7 @@ func NewVideoFrameV2() *VideoFrameV2 {
 func (p *SendInstance) SendVideoFrame(frame *VideoFrameV2) {
 	assertLibrary()
 
-	ndilib_send_send_video_v2(p.ndiInstance, uintptr(unsafe.Pointer(frame)))
+	ndilib_send_send_video_v2(p.ndiInstance, frame)
 }
 
 // Send video asynchronously, this call will return immediately, and you need to keep the video frame memory resident until a
@@ -115,14 +114,14 @@ func (p *SendInstance) SendVideoFrame(frame *VideoFrameV2) {
 func (p *SendInstance) SendVideoFrameAsync(frame *VideoFrameV2) {
 	assertLibrary()
 
-	ndilib_send_send_video_async_v2(p.ndiInstance, uintptr(unsafe.Pointer(frame)))
+	ndilib_send_send_video_async_v2(p.ndiInstance, frame)
 }
 
 // Send a metadata frame
 func (p *SendInstance) SendMetadataFrame(frame *MetadataFrame) {
 	assertLibrary()
 
-	ndilib_send_send_metadata(p.ndiInstance, uintptr(unsafe.Pointer(frame)))
+	ndilib_send_send_metadata(p.ndiInstance, frame)
 }
 
 // This method lets you receive metadata from the other end of the connection.
@@ -130,7 +129,7 @@ func (p *SendInstance) SendMetadataFrame(frame *MetadataFrame) {
 func (p *SendInstance) Capture(metadata *MetadataFrame, timeoutMs uint32) FrameType {
 	assertLibrary()
 
-	return FrameType(ndilib_send_capture(p.ndiInstance, uintptr(unsafe.Pointer(metadata)), timeoutMs))
+	return FrameType(ndilib_send_capture(p.ndiInstance, metadata, timeoutMs))
 }
 
 // Add a connection metadata string to the list of what is sent on each new connection. If someone is already connected then
@@ -138,7 +137,7 @@ func (p *SendInstance) Capture(metadata *MetadataFrame, timeoutMs uint32) FrameT
 func (p *SendInstance) AddConnectionMetadata(metadata *MetadataFrame) {
 	assertLibrary()
 
-	ndilib_send_add_connection_metadata(p.ndiInstance, uintptr(unsafe.Pointer(metadata)))
+	ndilib_send_add_connection_metadata(p.ndiInstance, metadata)
 }
 
 // Connection based metadata is data that is sent automatically each time a new connection is received. You queue all of these
@@ -164,7 +163,7 @@ func (p *SendInstance) GetTally(timeoutMs uint32) (*Tally, bool) {
 	assertLibrary()
 	tally := &Tally{}
 
-	changed := ndilib_send_get_tally(p.ndiInstance, uintptr(unsafe.Pointer(tally)), timeoutMs)
+	changed := ndilib_send_get_tally(p.ndiInstance, tally, timeoutMs)
 
 	return tally, changed
 }
@@ -173,28 +172,28 @@ func (p *SendInstance) GetTally(timeoutMs uint32) (*Tally, bool) {
 func (p *SendInstance) SendAudioFrame(frame *AudioFrameV2) {
 	assertLibrary()
 
-	ndilib_send_send_audio_v2(p.ndiInstance, uintptr(unsafe.Pointer(frame)))
+	ndilib_send_send_audio_v2(p.ndiInstance, frame)
 }
 
 // Send an audio frame. This call is syncronous and will block until the frame has been sent, if you specified clockAudio=true in NewNDISendInstance().
 func (p *SendInstance) SendAudioFrameV3(frame *AudioFrameV3) {
 	assertLibrary()
 
-	ndilib_send_send_audio_v3(p.ndiInstance, uintptr(unsafe.Pointer(frame)))
+	ndilib_send_send_audio_v3(p.ndiInstance, frame)
 }
 
 // Send an audio frame. This call is syncronous and will block until the frame has been sent, if you specified clockAudio=true in NewNDISendInstance().
 func (p *SendInstance) SendAudioFrame16s(frame *AudioFrameV3) {
 	assertLibrary()
 
-	ndilib_util_send_send_audio_interleaved_16s(p.ndiInstance, uintptr(unsafe.Pointer(frame)))
+	ndilib_util_send_send_audio_interleaved_16s(p.ndiInstance, frame)
 }
 
 // Send an audio frame. This call is syncronous and will block until the frame has been sent, if you specified clockAudio=true in NewNDISendInstance().
 func (p *SendInstance) SendAudioFrame32f(frame *AudioFrameV3) {
 	assertLibrary()
 
-	ndilib_util_send_send_audio_interleaved_32f(p.ndiInstance, uintptr(unsafe.Pointer(frame)))
+	ndilib_util_send_send_audio_interleaved_32f(p.ndiInstance, frame)
 }
 
 // This will assign a new fail-over source for this video source. What this means is that if this video source was to fail
@@ -203,5 +202,5 @@ func (p *SendInstance) SendAudioFrame32f(frame *AudioFrameV3) {
 func (p *SendInstance) SetFailover(source *Source) {
 	assertLibrary()
 
-	ndilib_send_set_failover(p.ndiInstance, uintptr(unsafe.Pointer(source)))
+	ndilib_send_set_failover(p.ndiInstance, source)
 }

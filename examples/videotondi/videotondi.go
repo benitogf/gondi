@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"runtime"
 	"time"
 
 	vidio "github.com/AlexEidt/Vidio"
@@ -111,7 +112,14 @@ func videoToNDI(fileName string, sender *gondi.SendInstance) {
 }
 
 func clear() {
-	cmd := exec.Command("clear")
+	if runtime.GOOS != "windows" {
+		cmd := exec.Command("clear")
+		cmd.Stdout = os.Stdout
+		cmd.Run()
+		return
+	}
+
+	cmd := exec.Command("cmd", "/c", "cls")
 	cmd.Stdout = os.Stdout
 	cmd.Run()
 }
